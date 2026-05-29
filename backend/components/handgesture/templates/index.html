@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hand Gesture Sign Language</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        
+        .input-section {
+            margin-bottom: 30px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        
+        #textInput {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        #textInput:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        #searchBtn {
+            width: 100%;
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background 0.3s;
+        }
+        
+        #searchBtn:hover {
+            background: #5568d3;
+        }
+        
+        .output-section {
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        #outputArea {
+            min-height: 200px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+        
+        video {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            font-size: 1.2em;
+            font-weight: 600;
+            padding: 20px;
+        }
+        
+        .loading {
+            color: #667eea;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤟 Hand Gesture Sign Language</h1>
+        
+        <div class="input-section">
+            <label for="textInput">Enter Text:</label>
+            <input type="text" id="textInput" placeholder="Type a phrase here..." />
+            <button id="searchBtn">Search Gesture</button>
+        </div>
+        
+        <div class="output-section">
+            <label>Output:</label>
+            <div id="outputArea">
+                <p style="color: #999;">Enter text above to see the corresponding sign language gesture</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const textInput = document.getElementById('textInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const outputArea = document.getElementById('outputArea');
+
+        searchBtn.addEventListener('click', searchGesture);
+        textInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchGesture();
+            }
+        });
+
+        async function searchGesture() {
+            const text = textInput.value.trim();
+            
+            if (!text) {
+                outputArea.innerHTML = '<p class="error-message">Please enter some text</p>';
+                return;
+            }
+
+            outputArea.innerHTML = '<p class="loading">Searching...</p>';
+
+            try {
+                const response = await fetch('/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    outputArea.innerHTML = `
+                        <video controls autoplay muted>
+                            <source src="/videos/${data.video}" type="video/webm">
+                            Your browser does not support the video tag.
+                        </video>
+                    `;
+                } else {
+                    outputArea.innerHTML = `<p class="error-message">${data.message}</p>`;
+                }
+            } catch (error) {
+                outputArea.innerHTML = '<p class="error-message">Error connecting to server</p>';
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
